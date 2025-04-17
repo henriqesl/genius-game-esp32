@@ -5,25 +5,27 @@
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 
-const uint8_t LED[] = {4, 5, 6, 7};
-const uint8_t BUTTON[] = {14, 15, 16, 17};
-const int BUZZER = 41;
+const uint8_t LED[] = {4, 5, 6, 7};           // LED pins (green, yellow, red, blue)
+const uint8_t BUTTON[] = {14, 15, 16, 17};    // Button pins corresponding to each LED
+const int BUZZER = 41;                        // Buzzer pin for sound feedback
 
-const int maxRounds = 30;
-int sequence[maxRounds];
-int playerIndex = 0;
-int currentStep = 0;
-bool playerTurn = false;
-int difficultyDelay = 800;
-int currentRound = 1;
+const int maxRounds = 30;                     // Maximum number of rounds
+int sequence[maxRounds];                      // Array to store the randomly generated sequence
+int playerIndex = 0;                          // Current index the player is trying to match
+int currentStep = 0;                          // Current step of the sequence being shown or checked
+bool playerTurn = false;                      // Flag to indicate if it's the player's turn
+int difficultyDelay = 800;                    // LED and sound delay (affects difficulty)
+int currentRound = 1;                         // Current game round
+
+// === GAME STATES ===
 
 enum GameState {
-  STATE_INIT,
-  STATE_DIFFICULTY_SELECT,
-  STATE_SHOW_SEQUENCE,
-  STATE_PLAYER_TURN,
-  STATE_GAME_OVER,
-  STATE_SUCCESS
+  STATE_INIT,                                 // Initial state: shows welcome message
+  STATE_DIFFICULTY_SELECT,                    // State to select difficulty level
+  STATE_SHOW_SEQUENCE,                        // State to show the current sequence
+  STATE_PLAYER_TURN,                          // State where player inputs the sequence
+  STATE_GAME_OVER,                            // State shown when the player makes a mistake
+  STATE_SUCCESS                               // State shown when the player completes all rounds
 };
 
 GameState gameState = STATE_INIT;
@@ -54,6 +56,51 @@ void setup() {
   digitalWrite(BUZZER, LOW);
 
   generateSequence();
+}
+
+void loop() {
+  switch (gameState) {
+    case STATE_INIT:
+      showWelcome();
+      gameState = STATE_DIFFICULTY_SELECT;
+      break;
+
+    case STATE_DIFFICULTY_SELECT:
+      selectDifficulty();
+      break;
+
+    case STATE_SHOW_SEQUENCE:
+      showSequence();
+      playerIndex = 0;
+      playerTurn = true;
+      gameState = STATE_PLAYER_TURN;
+      break;
+
+    case STATE_PLAYER_TURN:
+      handlePlayerInput();
+      break;
+
+    case STATE_GAME_OVER:
+      displayGameOver();
+      tone(BUZZER, 100, 400);
+      delay(2000);
+      resetGame();
+      break;
+
+    case STATE_SUCCESS:
+      displaySuccess();
+      tone(BUZZER, 1000, 300);
+      delay(500);
+      tone(BUZZER, 1200, 300);
+      delay(500);
+      tone(BUZZER, 1400, 300);
+      delay(1500);
+      resetGame();
+      break;
+
+    default:
+      break;
+  }
 }
 
 void showWelcome() {
@@ -140,51 +187,6 @@ void handlePlayerInput() {
       }
       break;
     }
-  }
-}
-
-void loop() {
-  switch (gameState) {
-    case STATE_INIT:
-      showWelcome();
-      gameState = STATE_DIFFICULTY_SELECT;
-      break;
-
-    case STATE_DIFFICULTY_SELECT:
-      selectDifficulty();
-      break;
-
-    case STATE_SHOW_SEQUENCE:
-      showSequence();
-      playerIndex = 0;
-      playerTurn = true;
-      gameState = STATE_PLAYER_TURN;
-      break;
-
-    case STATE_PLAYER_TURN:
-      handlePlayerInput();
-      break;
-
-    case STATE_GAME_OVER:
-      displayGameOver();
-      tone(BUZZER, 100, 400);
-      delay(2000);
-      resetGame();
-      break;
-
-    case STATE_SUCCESS:
-      displaySuccess();
-      tone(BUZZER, 1000, 300);
-      delay(500);
-      tone(BUZZER, 1200, 300);
-      delay(500);
-      tone(BUZZER, 1400, 300);
-      delay(1500);
-      resetGame();
-      break;
-
-    default:
-      break;
   }
 }
 
